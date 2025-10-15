@@ -31,4 +31,5 @@ CMD /bin/sh -c '/usr/bin/tf_serving_entrypoint.sh \
     --port=${GRPC_PORT:-8500} \
     --model_name=${MODEL_NAME} \
     --model_base_path=${MODEL_DIR} \
-    --monitoring_config_file=${MONITORING_CONFIG}'
+    --monitoring_config_file=${MONITORING_CONFIG} \
+    --alsologtostderr --v=1'
