@@ -7,7 +7,6 @@ COPY monitoring/prometheus.config /monitoring.config
 # ==== ENV default ====
 ARG MODEL_NAME=heart
 ENV MODEL_NAME=${MODEL_NAME}
-ENV TF_PORT=8501
 ENV GRPC_PORT=8500
 ENV MONITORING_CONFIG=/monitoring.config
 
@@ -27,13 +26,14 @@ RUN set -e; \
     cp -R "/tmp/arusdian/$chosen/"* ${MODEL_DIR}/1/; \
     test -f ${MODEL_DIR}/1/saved_model.pb || (echo "saved_model.pb not found" && exit 1)
 
-EXPOSE ${TF_PORT}
-EXPOSE ${GRPC_PORT}
+# EXPOSE informatif (opsional)
+EXPOSE 8501
+EXPOSE 8500
 
-# Pakai shell form agar ENV diexpand
+# Pakai $PORT dari Railway untuk REST; gRPC tetap 8500
 CMD /bin/sh -c "/usr/bin/tf_serving_entrypoint.sh \
-    --rest_api_port=${TF_PORT} \
-    --port=${GRPC_PORT} \
+    --rest_api_port=${PORT:-8501} \
+    --port=${GRPC_PORT:-8500} \
     --model_name=${MODEL_NAME} \
     --model_base_path=${MODEL_DIR} \
     --monitoring_config_file=${MONITORING_CONFIG}"
