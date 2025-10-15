@@ -34,7 +34,6 @@ Thumbs.db
 
 # --- Output / Generated files ---
 *.csv
-*.md
 *.png
 arusdian-pylint.txt
 artifacts/
