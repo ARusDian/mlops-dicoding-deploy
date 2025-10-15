@@ -1,9 +1,8 @@
 [build]
-builder = "docker"
-dockerfilePath = "Dockerfile"   # karena Dockerfile ada di folder ini
-context = "."                   # kirim folder ini saja ke Docker build
+dockerfilePath = "Dockerfile"
+context = "."
 
 [variables]
 MODEL_NAME = "heart"
-GRPC_PORT = "8500"
+GRPC_PORT  = "8500"
 MONITORING_CONFIG = "/monitoring.config"
