@@ -34,6 +34,6 @@ EXPOSE 8500
 CMD /bin/sh -c "/usr/bin/tf_serving_entrypoint.sh \
     --rest_api_port=${PORT:-8501} \
     --port=${GRPC_PORT:-8500} \
-    --model_name=${MODEL_NAME} \
-    --model_base_path=${MODEL_DIR} \
-    --monitoring_config_file=${MONITORING_CONFIG}"
+    --model_name=${MODEL_NAME:-heart} \
+    --model_base_path=/models/${MODEL_NAME:-heart} \
+    --monitoring_config_file=${MONITORING_CONFIG:-/monitoring.config}"
