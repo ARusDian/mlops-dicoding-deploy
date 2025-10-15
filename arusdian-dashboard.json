@@ -1,0 +1,349 @@
+{
+    "title": "TF Serving — Heart (Prom + Requests)",
+    "schemaVersion": 39,
+    "version": 3,
+    "refresh": "10s",
+    "tags": [
+        "tfserving",
+        "prometheus",
+        "mlops"
+    ],
+    "editable": true,
+    "templating": {
+        "list": [
+            {
+                "type": "datasource",
+                "name": "DS_PROM",
+                "label": "Prometheus",
+                "query": "prometheus",
+                "current": {}
+            },
+            {
+                "type": "query",
+                "name": "job",
+                "label": "job",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROM}"
+                },
+                "query": "label_values(up, job)",
+                "refresh": 1
+            },
+            {
+                "type": "query",
+                "name": "instance",
+                "label": "instance",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROM}"
+                },
+                "query": "label_values(up{job=\"$job\"}, instance)",
+                "refresh": 1
+            },
+            {
+                "type": "query",
+                "name": "model",
+                "label": "model_name (opsional)",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${DS_PROM}"
+                },
+                "query": "label_values(:tensorflow:serving:request_count{job=\"$job\",instance=\"$instance\"}, model_name)",
+                "includeAll": true,
+                "allValue": ".*",
+                "refresh": 1
+            }
+        ]
+    },
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Target UP",
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "editorMode": "code",
+                    "expr": "up{job=\"$job\", instance=\"$instance\"}"
+                }
+            ],
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "colorMode": "value",
+                "graphMode": "none"
+            }
+        },
+        {
+            "type": "stat",
+            "title": "QPS (requests/sec)",
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 4,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum(rate(:tensorflow:serving:request_count{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[1m]))"
+                }
+            ],
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "colorMode": "value",
+                "graphMode": "none"
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Predictions (last 5m)",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum(increase(:tensorflow:serving:request_count{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[5m]))"
+                }
+            ],
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "colorMode": "value",
+                "graphMode": "none"
+            }
+        },
+        {
+            "type": "stat",
+            "title": "Total Predictions",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "editorMode": "code",
+                    "expr": "sum(:tensorflow:serving:request_count{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"})"
+                }
+            ],
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "colorMode": "value",
+                "graphMode": "none"
+            }
+        },
+        {
+            "type": "timeseries",
+            "title": "Request latency p50 / p95 (s)",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 4
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "histogram_quantile(0.50, sum by (le) (rate(:tensorflow:serving:request_latency_bucket{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[5m])))",
+                    "legendFormat": "p50"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "histogram_quantile(0.95, sum by (le) (rate(:tensorflow:serving:request_latency_bucket{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[5m])))",
+                    "legendFormat": "p95"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Runtime latency p50 / p95 (s)",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 4
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "histogram_quantile(0.50, sum by (le) (rate(:tensorflow:serving:runtime_latency_bucket{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[5m])))",
+                    "legendFormat": "p50"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "histogram_quantile(0.95, sum by (le) (rate(:tensorflow:serving:runtime_latency_bucket{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[5m])))",
+                    "legendFormat": "p95"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "QPS per Model",
+            "gridPos": {
+                "h": 7,
+                "w": 12,
+                "x": 0,
+                "y": 12
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "sum by (model_name) (rate(:tensorflow:serving:request_count{job=\"$job\", instance=\"$instance\"}[1m]))",
+                    "legendFormat": "{{model_name}}"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Requests by Version (QPS)",
+            "gridPos": {
+                "h": 7,
+                "w": 12,
+                "x": 12,
+                "y": 12
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "custom": {
+                        "stacking": {
+                            "mode": "normal"
+                        }
+                    }
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "sum by (model_version) (rate(:tensorflow:serving:request_count{job=\"$job\", instance=\"$instance\", model_name=~\"$model\"}[1m]))",
+                    "legendFormat": "v{{model_version}}"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "SavedModel load attempts/sec",
+            "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 0,
+                "y": 19
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "rate(:tensorflow:cc:saved_model:load_attempt_count{job=\"$job\", instance=\"$instance\"}[1m])",
+                    "legendFormat": "attempts/s"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "SavedModel load latency (μs)",
+            "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 12,
+                "y": 19
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": ":tensorflow:cc:saved_model:load_latency{job=\"$job\", instance=\"$instance\"}",
+                    "legendFormat": "load_latency_us"
+                }
+            ]
+        },
+        {
+            "type": "timeseries",
+            "title": "Process CPU (sec/s) & RSS (bytes)",
+            "gridPos": {
+                "h": 6,
+                "w": 24,
+                "x": 0,
+                "y": 25
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "rate(process_cpu_seconds_total{job=\"$job\", instance=\"$instance\"}[1m])",
+                    "legendFormat": "cpu sec/s"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${DS_PROM}"
+                    },
+                    "expr": "process_resident_memory_bytes{job=\"$job\", instance=\"$instance\"}",
+                    "legendFormat": "rss bytes"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,40 @@
+# --- Python & Virtual Env ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.venv/
+venv/
+*.log
+*.tmp
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb~ 
+*.nbconvert.ipynb
+
+# --- TF/TFX Artifacts ---
+arusdian-pipeline/artifacts/
+arusdian-pipeline/metadata/
+# Jangan commit model berat ke GitHub, tapi boleh zip untuk submission
+
+# --- Monitoring ---
+monitoring/prometheus_data/
+grafana_data/
+
+# --- System ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.sqlite
+*.db
+
+# --- Output / Generated files ---
+*.csv
+*.md
+*.png
+arusdian-pylint.txt
+artifacts/

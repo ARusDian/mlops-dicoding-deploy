@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Scrape TF Serving (REST port 8501)
+  - job_name: 'tfserving'
+    metrics_path: /monitoring/prometheus/metrics
+    static_configs:
+      - targets: ['tfserving:8501']
+
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
